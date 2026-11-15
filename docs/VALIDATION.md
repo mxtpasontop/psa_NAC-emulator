@@ -82,10 +82,56 @@ Both the original Qt/HMI startup probe and the new renderer probe passed with
 that adaptation. The backing SD image's SHA-256 still matched its preparation
 manifest after the writable-snapshot graphics checks.
 
-## Limits of this result
+## Native service startup checkpoint
 
-The HMI process is stopped at an early initialization checkpoint. The test
-does not demonstrate a fully initialized HMI, Qt Quick rendering, complete
+The longer `--hmi-probe --observe-seconds 90` mode was exercised with the same
+firmware, original kernel and TCG-only VM. Unlike the quick UI smoke test, it
+continues beyond the master-creation message. It uses the original framework
+plugin paths and starts the original DLT daemon, Node State Manager,
+`ApplicationFwkCore` and HMI master against a private guest D-Bus daemon.
+The eMMC root filesystem remains mounted read-only. `/var`, `/Data`, `/media`,
+`/tmp`, `/run` and `/dev/shm` are temporary filesystems.
+
+Observed results included:
+
+- The original Qt offscreen application probe completed.
+- The master created `shared.hmicommon.syshmi.ovip` settings shared memory.
+- The original NSM registered `org.genivi.NodeStateManager`.
+- The original application framework registered its execution-control,
+  content-broker and profile-management services.
+- The original HMI master registered `org.ovip.uifwk` and its lifecycle service.
+- The master remained alive at collection time.
+- The registered HMI service answered a D-Bus peer ping.
+
+The service registrations were read from D-Bus's live name inventory, not
+inferred from a startup log. Some native constructor and initialization messages
+were absent; report fields with `message_observed` describe log capture only.
+The read-only D-Bus ping returned successfully and is reported separately as
+`hmi_bus_ping_verified`.
+No HMI screen was rendered by this mode.
+
+A repeated quick UI probe exceeded the old 60-second command budget during
+cold Qt library loading. Firmware probes now default to a 180-second command
+budget, and an explicit `--command-timeout` is respected. The initial shell
+timeout and the subsequent host observation window remain separate controls.
+The quick UI probe passed when repeated with the larger command budget.
+
+Starting the OEM DLT daemon without a watchdog interval produced repeated
+`Failed to read timer_wd; Bad file descriptor` warnings. Supplying
+`WATCHDOG_USEC=20000000` removed those warnings in the repeated run. This matches
+the watchdog timer setup in the [upstream DLT source](https://github.com/COVESA/dlt-daemon/blob/v2.17.0/src/daemon/dlt-daemon.c).
+The probe supplies the interval only; it does not implement or acknowledge a
+systemd watchdog.
+
+Missing vehicle persistence data and zone-monitor state remain visible in the
+master's native logs. Public service registration is a startup milestone, not
+proof that the complete HMI, its applications or vehicle functions are ready.
+
+## Limits of these results
+
+The quick UI probe stops the HMI process at an early initialization checkpoint.
+The longer probe observes native service startup. These tests
+do not demonstrate a fully initialized HMI, Qt Quick rendering, complete
 systemd startup, navigation, audio, vehicle communication or real hardware
 compatibility. Winston's Vivante output plugin still requires `/dev/galcore`.
 Missing persistence keys and vehicle services remain unresolved.

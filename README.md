@@ -15,7 +15,10 @@ required. It uses one emulated Cortex-A9 CPU and 1 GiB of guest RAM.
 **Current status:** a working diagnostic shell and mounted eMMC filesystem;
 the original Qt 5.5 offscreen backend initializes, and the original HMI master
 enters its startup code and begins constructing its master object. An optional
-Mesa/Xvfb overlay now renders a verified 800×480 test scene through the
+longer HMI probe starts the native Node State Manager and application framework,
+verifies their D-Bus service registrations, and reaches the master's own public
+D-Bus service registration beyond that checkpoint. The optional
+Mesa/Xvfb overlay renders a verified 800×480 test scene through the
 firmware's own Qt OpenGL paint engine. The full Peugeot touchscreen interface
 is not running and no HMI frame has been rendered.
 This is a development environment for rehosting the actual firmware.
@@ -25,7 +28,8 @@ This is a development environment for rehosting the actual firmware.
 | Original ARM Linux kernel and early userspace | Boots to a working shell |
 | Original eMMC filesystem | Mounts; native programs execute |
 | Original Qt 5.5 offscreen platform | Initializes successfully |
-| Original HMI master | Begins constructing its master object |
+| Original HMI master | Creates shared settings memory and registers its public D-Bus service in the longer probe |
+| Native NSM and application framework | Run and register D-Bus services in the HMI observation probe |
 | Software EGL/GLES with Mesa softpipe | Renders and verifies pixels |
 | Original Qt OpenGL paint engine | Renders an 800×480 diagnostic scene; exports PNG |
 | Complete HMI and rendered touchscreen | Not implemented |
@@ -141,6 +145,55 @@ with GNU ld against the original firmware libc ABI. This avoids the observed
 incompatibility between the modern Zig/LLD output and the old ARM loader. The
 Qt probe constructs and destroys a real `QGuiApplication` through the exact
 Qt 5.5 ABI; it does not provide a replacement HMI.
+
+## Observe native HMI services
+
+To continue past the quick UI probe's deliberate stop:
+
+```powershell
+python .\nac-emulator\tools\prepare_ui.py
+python .\nac-emulator\tools\run.py --hmi-probe --seconds 60 --observe-seconds 90 --name hmi-check
+```
+
+This mode starts the original DLT daemon, Node State Manager,
+`ApplicationFwkCore` and `UIFwkMasterProcess` inside the guest. It uses the
+firmware's framework plugin paths, a private D-Bus daemon and temporary shared
+memory, and keeps Qt on its offscreen platform. It does not start the full
+vehicle service set or render a screen.
+
+`--observe-seconds` is a **host wall-clock** observation period after the guest
+startup script returns. It defaults to 60 for `--hmi-probe`; cold library loading
+and service startup can need longer under TCG. `--seconds` remains the initial
+shell timeout. The probe streams the master log, then collects process states,
+log tails, a D-Bus name inventory and a read-only HMI bus ping before shutting down QEMU.
+
+Locally observed milestones include the native NSM and framework registering
+their D-Bus services, and the master creating its shared settings memory and
+registering `org.ovip.uifwk`. The report's `*_message_observed` fields only
+indicate that a native log message was captured; an absent message does not
+prove startup failed. D-Bus registration and ping results are independent
+observations. For example:
+
+```json
+{
+  "native_nsm_on_bus": true,
+  "native_framework_on_bus": true,
+  "hmi_master_alive": true,
+  "hmi_settings_shared_memory_created": true,
+  "native_hmi_on_bus": true,
+  "hmi_bus_ping_verified": true,
+  "hmi_probe_complete": true,
+  "hmi_frame_verified": false
+}
+```
+
+`hmi_bus_ping_verified` reports whether the registered master answered the bus
+ping. `hmi_probe_complete` means the observation and collection finished. It does
+not mean the HMI is ready. Missing persistence keys, zone shared memory and
+zone-monitor paths remain visible in the native logs. Check
+`logs/hmi-check.json` and `logs/hmi-check-serial.log` for your run's actual results.
+All changes remain inside temporary guest filesystems; the root filesystem is
+mounted read-only in this mode.
 
 ## Probe software graphics
 
@@ -265,7 +318,10 @@ It then closes the VM and returns to PowerShell. This is the intended diagnostic
 checkpoint; it is not a fully booted infotainment session.
 
 `--seconds` sets the maximum wait for the initial shell. Guest commands can
-extend the total run time. The UI probe deliberately terminates its HMI child
+extend the total run time. Firmware probes allow 180 host seconds per guest
+command by default because cold library loading can exceed 60 seconds under
+TCG. Use `--command-timeout` to change that limit (1–300 seconds); an explicitly
+supplied value is respected by all modes. The UI probe deliberately terminates its HMI child
 process after the checkpoint, so a termination message can appear in the log.
 
 If a probe fails, inspect both `logs/<name>-serial.log` and

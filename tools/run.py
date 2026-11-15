@@ -8,6 +8,7 @@ import socket
 import subprocess
 import time
 from frames import read_frame, png_bytes
+from hmi_report import summarize as summarize_hmi
 
 BASE = Path(__file__).resolve().parents[1]
 
@@ -21,30 +22,36 @@ def main():
     parser.add_argument('--rootfs', action='store_true', help='Attach the eMMC filesystem through a disposable SD snapshot')
     parser.add_argument('--commands', type=Path, help='Run this shell script inside the guest diagnostic shell')
     parser.add_argument('--initrd', type=Path, default=BASE/'images/earlyaudio.cpio')
-    parser.add_argument('--command-timeout', type=int, default=10)
+    parser.add_argument('--command-timeout', type=int, help='Host seconds per guest command (default: 10, or 180 for firmware probes)')
+    parser.add_argument('--observe-seconds', type=int, default=0, help='Keep collecting serial output for this many host seconds after commands finish')
     parser.add_argument('--ui-probe', action='store_true', help='Probe the native Qt and HMI processes using the prepared diagnostic initramfs')
     parser.add_argument('--render-probe', action='store_true', help='Test software GLES pixels with the isolated Mesa overlay')
+    parser.add_argument('--hmi-probe', action='store_true', help='Observe native HMI and framework services beyond the early startup checkpoint')
     args = parser.parse_args()
-    if args.ui_probe and args.render_probe:
+    if sum((args.ui_probe, args.render_probe, args.hmi_probe)) > 1:
         parser.error('Choose one diagnostic mode')
-    if args.ui_probe:
+    if args.ui_probe or args.hmi_probe:
         args.rootfs = True
         args.initrd = BASE/'images/diagnostic.cpio.gz'
         args.commands = BASE/'tools/enter-guest.sh'
-        args.command_timeout = 60
         if not args.initrd.exists():
             parser.error('Run tools/prepare_ui.py first')
+        if args.hmi_probe and not args.observe_seconds:
+            args.observe_seconds = 60
     if args.render_probe:
         args.rootfs = True
         args.initrd = BASE/'images/render.cpio.gz'
         args.commands = BASE/'tools/enter-guest.sh'
-        args.command_timeout = 60
         if not args.initrd.exists():
             parser.error('Run tools/prepare_render.py first')
     if not 1 <= args.seconds <= 300:
         parser.error('seconds must be between 1 and 300')
-    if not 1 <= args.command_timeout <= 60:
-        parser.error('command-timeout must be between 1 and 60')
+    if args.command_timeout is None:
+        args.command_timeout = 180 if (args.ui_probe or args.render_probe or args.hmi_probe) else 10
+    if not 1 <= args.command_timeout <= 300:
+        parser.error('command-timeout must be between 1 and 300')
+    if not 0 <= args.observe_seconds <= 300:
+        parser.error('observe-seconds must be between 0 and 300')
     if not args.name.replace('-', '').replace('_', '').isalnum():
         parser.error('name may contain letters, digits, hyphens and underscores')
     logs = BASE/'logs'
@@ -72,7 +79,7 @@ def main():
             parser.error('Run prepare.py --rootfs to create images/rootfs-sd.img')
         command.extend(['-drive', f'file={card},if=none,id=nacroot,format=raw,snapshot=on',
                         '-device', 'sd-card,drive=nacroot,bus=sd-bus'])
-    report = {'command':command, 'software_emulation':True}
+    report = {'command':command, 'software_emulation':True, 'command_timeout_seconds':args.command_timeout}
     with (logs/f'{args.name}-qemu.log').open('wb') as out:
         process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=out, stderr=subprocess.STDOUT)
         try:
@@ -101,7 +108,7 @@ def main():
                             raise RuntimeError(response['error'])
                 qmp('qmp_capabilities')
                 qmp('cont')
-                print(f'Running ARM guest with TCG software emulation for {args.seconds} seconds.', flush=True)
+                print(f'Booting ARM guest with TCG software emulation (shell timeout: {args.seconds} seconds).', flush=True)
                 console = ''
                 serial.write_text('')
                 def receive():
@@ -129,11 +136,11 @@ def main():
                 commands = 'echo NAC_TCG_SHELL_OK\n'
                 if args.render_probe:
                     commands += 'NAC_GUEST_ENTRY=render.sh\nNAC_ROOTFS_MODE=rw\n'
+                if args.hmi_probe:
+                    commands += 'NAC_GUEST_ENTRY=hmi-start.sh\n'
                 if args.commands:
                     commands += args.commands.read_text().replace('\r', '')+'\n'
-                for line in commands.splitlines():
-                    if not line.strip():
-                        continue
+                def execute_line(line):
                     for char in line+'\n':
                         terminal.sendall(char.encode())
                         time.sleep(.01)
@@ -144,7 +151,18 @@ def main():
                         if re.search(r'(?:^|\n)#(?: |$)', response):
                             break
                         time.sleep(.1)
-                    console += response
+                    return response
+                for line in commands.splitlines():
+                    if line.strip():
+                        console += execute_line(line)
+                if args.observe_seconds:
+                    print(f'Observing guest for {args.observe_seconds} host seconds.', flush=True)
+                    deadline = time.monotonic()+args.observe_seconds
+                    while time.monotonic() < deadline:
+                        console += receive()
+                        time.sleep(.1)
+                if args.hmi_probe:
+                    console += execute_line('/mnt/root/bin/busybox chroot /mnt/root /bin/sh /tmp/nac/hmi-collect.sh')
                 qmp('stop')
                 console += receive()
                 serial.write_text(console.replace('\r\n', '\n').replace('\r', ''))
@@ -155,6 +173,9 @@ def main():
                     report['hmi_master_started'] = 'UIFwkMasterProcess::main Starting' in console
                     report['graphics_probe_complete'] = '\nNAC_GRAPHICS_DIAG_END\n' in console.replace('\r', '')
                     report['rendered_frame_verified'] = False
+                if args.hmi_probe:
+                    report.update(summarize_hmi(console))
+                    report['observe_seconds'] = args.observe_seconds
                 if args.render_probe:
                     report['software_gles_verified'] = '\nNAC_SOFTWARE_GLES_OK\n' in console.replace('\r', '')
                     report['graphics_probe_complete'] = '\nNAC_RENDER_DIAG_END\n' in console.replace('\r', '')
@@ -198,10 +219,17 @@ def main():
     print(f'Diagnostics saved to {logs/args.name}.json')
     if report.get('frame_file'):
         print(f'Qt diagnostic scene saved to {report["frame_file"]}')
+    if args.hmi_probe:
+        print('Native HMI observation: '+json.dumps({key: report[key] for key in (
+            'hmi_master_alive', 'native_nsm_on_bus', 'native_framework_on_bus',
+            'hmi_settings_shared_memory_created', 'native_hmi_on_bus',
+            'hmi_bus_ping_verified', 'hmi_frame_verified')}))
     if not report.get('shell_verified'):
         raise SystemExit('Shell verification failed; inspect the diagnostic logs')
     if args.ui_probe and not (report.get('qt_offscreen_verified') and report.get('hmi_master_started') and report.get('graphics_probe_complete')):
         raise SystemExit('Native UI diagnostic did not complete successfully; inspect the logs')
+    if args.hmi_probe and not (report.get('qt_offscreen_verified') and report.get('hmi_master_started') and report.get('hmi_probe_complete')):
+        raise SystemExit('HMI observation did not complete successfully; inspect the logs')
     if args.render_probe and not (report.get('software_gles_verified') and report.get('graphics_probe_complete')
                                   and report.get('rendered_frame_verified')):
         raise SystemExit('Software GLES diagnostic failed; inspect the logs')
