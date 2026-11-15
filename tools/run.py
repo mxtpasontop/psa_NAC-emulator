@@ -7,6 +7,7 @@ import select
 import socket
 import subprocess
 import time
+from frames import read_frame, png_bytes
 
 BASE = Path(__file__).resolve().parents[1]
 
@@ -22,7 +23,10 @@ def main():
     parser.add_argument('--initrd', type=Path, default=BASE/'images/earlyaudio.cpio')
     parser.add_argument('--command-timeout', type=int, default=10)
     parser.add_argument('--ui-probe', action='store_true', help='Probe the native Qt and HMI processes using the prepared diagnostic initramfs')
+    parser.add_argument('--render-probe', action='store_true', help='Test software GLES pixels with the isolated Mesa overlay')
     args = parser.parse_args()
+    if args.ui_probe and args.render_probe:
+        parser.error('Choose one diagnostic mode')
     if args.ui_probe:
         args.rootfs = True
         args.initrd = BASE/'images/diagnostic.cpio.gz'
@@ -30,6 +34,13 @@ def main():
         args.command_timeout = 60
         if not args.initrd.exists():
             parser.error('Run tools/prepare_ui.py first')
+    if args.render_probe:
+        args.rootfs = True
+        args.initrd = BASE/'images/render.cpio.gz'
+        args.commands = BASE/'tools/enter-guest.sh'
+        args.command_timeout = 60
+        if not args.initrd.exists():
+            parser.error('Run tools/prepare_render.py first')
     if not 1 <= args.seconds <= 300:
         parser.error('seconds must be between 1 and 300')
     if not 1 <= args.command_timeout <= 60:
@@ -107,12 +118,17 @@ def main():
                 deadline = time.monotonic()+args.seconds
                 while time.monotonic() < deadline:
                     console += receive()
-                    if console.rstrip().endswith('#'):
+                    if re.search(r'(?:^|\n)#(?: |$)', console):
                         break
                     time.sleep(.25)
+                if not re.search(r'(?:^|\n)#(?: |$)', console):
+                    report['shell_verified'] = False
+                    raise SystemExit('Guest shell did not become ready; inspect the serial and QEMU logs')
                 # Feed characters at terminal speed so the emulated UART FIFO
                 # does not discard the end of long command lines.
                 commands = 'echo NAC_TCG_SHELL_OK\n'
+                if args.render_probe:
+                    commands += 'NAC_GUEST_ENTRY=render.sh\nNAC_ROOTFS_MODE=rw\n'
                 if args.commands:
                     commands += args.commands.read_text().replace('\r', '')+'\n'
                 for line in commands.splitlines():
@@ -139,6 +155,24 @@ def main():
                     report['hmi_master_started'] = 'UIFwkMasterProcess::main Starting' in console
                     report['graphics_probe_complete'] = '\nNAC_GRAPHICS_DIAG_END\n' in console.replace('\r', '')
                     report['rendered_frame_verified'] = False
+                if args.render_probe:
+                    report['software_gles_verified'] = '\nNAC_SOFTWARE_GLES_OK\n' in console.replace('\r', '')
+                    report['graphics_probe_complete'] = '\nNAC_RENDER_DIAG_END\n' in console.replace('\r', '')
+                    report['rendered_frame_verified'] = False
+                    report['hmi_frame_verified'] = False
+                    report['qt_software_paint_verified'] = '\nNAC_QT_SOFTWARE_PAINT_OK\n' in console.replace('\r', '')
+                    try:
+                        pixels = read_frame(console, 'NAC_FRAME', 16, 16)
+                        (logs/f'{args.name}-gles-frame.ppm').write_bytes(pixels)
+                        report['gles_frame_verified'] = report['software_gles_verified']
+                        qt_pixels = read_frame(console, 'NAC_QT_FRAME', 800, 480, compressed=True)
+                        frame = logs/f'{args.name}-frame.png'
+                        frame.write_bytes(png_bytes(qt_pixels, 800, 480))
+                        report['rendered_frame_verified'] = report['qt_software_paint_verified']
+                        report['frame_kind'] = 'qt_paint_test_scene'
+                        report['frame_file'] = str(frame)
+                    except (ValueError, OSError, EOFError) as error:
+                        report['frame_error'] = str(error)
                 report['registers'] = qmp('human-monitor-command', {'command-line':'info registers'})
                 if args.dump_ram:
                     path = str(logs/f'{args.name}-ram.bin').replace('\\', '/')
@@ -157,12 +191,20 @@ def main():
                     process.wait(timeout=5)
             report['exit_code'] = process.returncode
             (logs/f'{args.name}.json').write_text(json.dumps(report, indent=2)+'\n')
-    print(serial.read_text(errors='replace')[-1800:])
+    visible_log = re.sub(r'(NAC_(?:QT_)?FRAME)_BEGIN\n.*?\n\1_END',
+                         r'\1: [frame payload saved in serial log]',
+                         serial.read_text(errors='replace'), flags=re.DOTALL)
+    print(visible_log[-1800:])
     print(f'Diagnostics saved to {logs/args.name}.json')
+    if report.get('frame_file'):
+        print(f'Qt diagnostic scene saved to {report["frame_file"]}')
     if not report.get('shell_verified'):
         raise SystemExit('Shell verification failed; inspect the diagnostic logs')
     if args.ui_probe and not (report.get('qt_offscreen_verified') and report.get('hmi_master_started') and report.get('graphics_probe_complete')):
         raise SystemExit('Native UI diagnostic did not complete successfully; inspect the logs')
+    if args.render_probe and not (report.get('software_gles_verified') and report.get('graphics_probe_complete')
+                                  and report.get('rendered_frame_verified')):
+        raise SystemExit('Software GLES diagnostic failed; inspect the logs')
 
 
 if __name__ == '__main__':

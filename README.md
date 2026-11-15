@@ -14,8 +14,10 @@ required. It uses one emulated Cortex-A9 CPU and 1 GiB of guest RAM.
 
 **Current status:** a working diagnostic shell and mounted eMMC filesystem;
 the original Qt 5.5 offscreen backend initializes, and the original HMI master
-enters its startup code and begins constructing its master object. The full
-Peugeot touchscreen interface is not running and no HMI frame has been rendered.
+enters its startup code and begins constructing its master object. An optional
+Mesa/Xvfb overlay now renders a verified 800×480 test scene through the
+firmware's own Qt OpenGL paint engine. The full Peugeot touchscreen interface
+is not running and no HMI frame has been rendered.
 This is a development environment for rehosting the actual firmware.
 
 | Capability | Status |
@@ -24,6 +26,8 @@ This is a development environment for rehosting the actual firmware.
 | Original eMMC filesystem | Mounts; native programs execute |
 | Original Qt 5.5 offscreen platform | Initializes successfully |
 | Original HMI master | Begins constructing its master object |
+| Software EGL/GLES with Mesa softpipe | Renders and verifies pixels |
+| Original Qt OpenGL paint engine | Renders an 800×480 diagnostic scene; exports PNG |
 | Complete HMI and rendered touchscreen | Not implemented |
 | Vehicle services, CAN, audio, radio and navigation | Not validated |
 
@@ -138,6 +142,53 @@ incompatibility between the modern Zig/LLD output and the old ARM loader. The
 Qt probe constructs and destroys a real `QGuiApplication` through the exact
 Qt 5.5 ABI; it does not provide a replacement HMI.
 
+## Probe software graphics
+
+After preparing the firmware and UI tools above:
+
+```powershell
+python .\nac-emulator\tools\prepare_render.py
+python .\nac-emulator\tools\run.py --render-probe --seconds 60 --name render-check
+```
+
+The optional preparation downloads checksum-pinned ARM packages from Debian's
+Jessie and Jessie backports archives. It places Mesa 13.0.6, Xvfb and their
+dependencies in an isolated guest overlay. It keeps the firmware's original
+glibc 2.18 and kernel. The full package list, versions and SHA-256 hashes are in
+`tools/render-packages.json`; upstream copyright notices are retained locally
+under `guest/mesa/licenses`. These old packages are used for ABI compatibility.
+The guest has no network interface.
+
+The probe starts a private Xvfb display with TCP listening disabled, forces
+Mesa's **softpipe** software renderer, and verifies a real GLES pbuffer by
+reading its pixels. It then uses the original Qt 5.5 `minimalegl` platform,
+`QOpenGLContext`, `QOpenGLPaintDevice` and `QPainter` to render coloured rectangles.
+`guest-src/egl_bridge.c` adapts minimalegl's null native window to a real
+800×480 Mesa pbuffer. No fake GPU device or precomputed frame is supplied.
+
+A successful run saves `logs/render-check-frame.png`, the serial transcript
+and a report containing:
+
+```json
+{
+  "software_gles_verified": true,
+  "qt_software_paint_verified": true,
+  "rendered_frame_verified": true,
+  "frame_kind": "qt_paint_test_scene",
+  "hmi_frame_verified": false
+}
+```
+
+The PNG is a diagnostic scene, not the Peugeot interface. This verifies the
+software graphics foundation; Qt Quick and the complete HMI are still untested.
+The render probe temporarily mounts its **disposable QEMU disk snapshot**
+writable to add an XKB compiler link. The backing image and OEM update stay
+intact. Other probes continue to mount the root filesystem read-only. Mesa and
+the EGL adapter are enabled only in this probe, and its larger initramfs is
+separate from the existing UI diagnostic.
+
+## Interactive serial console
+
 For an interactive serial console:
 
 ```powershell
@@ -176,6 +227,8 @@ The stock QEMU `sabrelite` model supplies part of the i.MX6 hardware. A separate
 `board-headless.dtb` disables the unsupported IPU, framebuffer, Vivante GPU,
 LVDS, video capture and selected board watchdog devices. The original DTB is
 retained as `board-245f4.dtb`. The root compatible becomes `fsl,imx6q`.
+The bus-frequency device is also disabled: its DDR low-power transition could
+otherwise hang boot intermittently at `Bus freq set to 24000000 start...`.
 
 The experimental DTB enables the SDHC4 controller with an empty pinctrl state,
 four-bit SD mode and non-removable media. Other SD controllers are disabled.
@@ -192,9 +245,9 @@ instruction patches are applied.
 The graphical interface depends on Continental's Winston Wayland compositor,
 the original Qt applications, graphics drivers and vehicle services. Disabling
 the unsupported graphics devices allows the shell to boot but cannot display
-the HMI. Further work needs either graphics-device emulation or a compatible
-software graphics/compositor path, plus service configuration and vehicle
-message stubs. Audio, radio, navigation/GPS, CAN behavior and normal systemd
+the HMI. The optional software renderer now works for a native Qt paint test,
+but integrating it with the HMI still requires application/service configuration,
+persistence and vehicle message stubs. Audio, radio, navigation/GPS, CAN behavior and normal systemd
 startup have not been validated.
 
 The compositor configuration loads `libwlxs-viv-output.so`, which requires
@@ -228,7 +281,8 @@ From the repository directory:
 python -m unittest discover -s tests -v
 ```
 
-The automated tests use synthetic device trees and initramfs payloads. They
+The automated tests use synthetic device trees, initramfs payloads, Debian
+archives and frame transfers. They
 do not require firmware, keys, QEMU or third-party Python packages. GitHub Actions
 runs these checks on Linux and Windows. Actual firmware boot and HMI startup
 remain integration checks performed locally with the commands above.
@@ -243,6 +297,8 @@ for further work.
 - [Windows QEMU builds](https://qemu.weilnetz.de/w64/), also linked from [QEMU's download page](https://www.qemu.org/download/).
 - [Zig downloads](https://ziglang.org/download/) and [GNU ARM binutils package](https://packages.msys2.org/packages/mingw-w64-ucrt-x86_64-arm-none-eabi-binutils).
 - [Debian's archived strace package](https://archive.debian.org/debian/pool/main/s/strace/).
+- [Debian's Mesa build configuration](https://sources.debian.org/src/mesa/13.0.6-1~bpo8%2B1/debian/rules/) and [archived packages](https://archive.debian.org/debian/).
+- [Qt 5.5 minimalegl source](https://github.com/qt/qtbase/tree/v5.5.0/src/plugins/platforms/minimalegl).
 
 OEM images, downloaded tools, research keys and logs are ignored by `.gitignore`.
 Upstream components retain their own licenses in their downloaded directories.

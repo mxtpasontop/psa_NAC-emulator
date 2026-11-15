@@ -4,7 +4,7 @@ The goal is to rehost the original NAC software while keeping its update
 package intact. Work should remain reproducible with QEMU TCG and the pinned
 tool versions used by the preparation scripts.
 
-Useful next steps include an OpenGL ES or software-rendering path for Qt Quick,
+Useful next steps include integrating the verified Mesa software path with Qt Quick,
 Winston output compatibility, persistence initialization and explicit stubs for
 the vehicle services needed by the HMI. Record which behavior is observed and
 which behavior is simulated.

@@ -90,8 +90,11 @@ def main():
                          ('Universes','ui-app-data-resource.tar.gz')]:
         run(openssl, 'smime', '-decrypt', '-in', firmware/folder/name,
             '-inkey', key, '-out', assets/name)
+    run(sys.executable, BASE/'tools/dtb.py', BASE/'images/board-245f4.dtb', BASE/'images/board-headless.dtb')
     run(sys.executable, BASE/'tools/build_guest.py')
-    run(sys.executable, BASE/'tools/pack_initrd.py', guest, BASE/'images/diagnostic.cpio.gz')
+    run(sys.executable, BASE/'tools/pack_initrd.py', guest, BASE/'images/diagnostic.cpio.gz',
+        '--exclude', 'mesa', '--exclude', 'egl-probe', '--exclude', 'render.sh',
+        '--exclude', 'libNacEglBridge.so', '--exclude', 'qt-render-probe')
     print('Native UI diagnostics ready. Run tools/run.py --ui-probe --seconds 45')
 
 

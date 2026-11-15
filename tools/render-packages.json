@@ -1,0 +1,406 @@
+[
+  {
+    "Package": "libgbm1",
+    "Version": "13.0.6-1~bpo8+1",
+    "Filename": "pool/main/m/mesa/libgbm1_13.0.6-1~bpo8+1_armhf.deb",
+    "SHA256": "a6e4ad64f60d7b86f8dccfa80f0a52cbba4ea5cb274dd704e2e8581b7a79a299",
+    "Depends": "libc6 (>= 2.8), libdrm2 (>= 2.4.66), libexpat1 (>= 2.0.1), libwayland-client0 (>= 1.2.0), libwayland-server0 (>= 1.2.0)"
+  },
+  {
+    "Package": "libwayland-server0",
+    "Version": "1.6.0-2",
+    "Filename": "pool/main/w/wayland/libwayland-server0_1.6.0-2_armhf.deb",
+    "SHA256": "ad119fbde1e77525152ed17a66f74ef530d256b5bff2b5dea0514fb90b09fafa",
+    "Depends": "libc6 (>= 2.10), libffi6 (>= 3.0.4)"
+  },
+  {
+    "Package": "libffi6",
+    "Version": "3.1-2+deb8u1",
+    "Filename": "pool/main/libf/libffi/libffi6_3.1-2+deb8u1_armhf.deb",
+    "SHA256": "3225bb209c515470e174916594fbfc3213f3633af50410c09cc481b323203640",
+    "Depends": "libc6 (>= 2.4), libgcc1 (>= 1:4.4.0)"
+  },
+  {
+    "Package": "libgcc1",
+    "Version": "1:4.9.2-10+deb8u1",
+    "Filename": "pool/main/g/gcc-4.9/libgcc1_4.9.2-10+deb8u1_armhf.deb",
+    "SHA256": "a456c21c4805a3003586a492af1ddd68083de81f75f3da0807732ad44306541c",
+    "Depends": "gcc-4.9-base (= 4.9.2-10+deb8u1), libc6 (>= 2.4)"
+  },
+  {
+    "Package": "libwayland-client0",
+    "Version": "1.6.0-2",
+    "Filename": "pool/main/w/wayland/libwayland-client0_1.6.0-2_armhf.deb",
+    "SHA256": "b7e78411a914895cd9ca7939c7544d96ab5301621b6464219a7abbf78551701a",
+    "Depends": "libc6 (>= 2.10), libffi6 (>= 3.0.4)"
+  },
+  {
+    "Package": "libexpat1",
+    "Version": "2.1.0-6+deb8u4",
+    "Filename": "pool/main/e/expat/libexpat1_2.1.0-6+deb8u4_armhf.deb",
+    "SHA256": "5444982b2a0e2d091e1918de2fdded3ddaad79e766fc3c984c3ad61341696b89",
+    "Depends": "libc6 (>= 2.4), libgcc1 (>= 1:4.4.0)"
+  },
+  {
+    "Package": "libdrm2",
+    "Version": "2.4.74-1~bpo8+1",
+    "Filename": "pool/main/libd/libdrm/libdrm2_2.4.74-1~bpo8+1_armhf.deb",
+    "SHA256": "4889c682efc99ac755c26140e41c8b163f43e55e5babcebc39c555f8df8f0912",
+    "Depends": "libc6 (>= 2.17)"
+  },
+  {
+    "Package": "libgl1-mesa-dri",
+    "Version": "13.0.6-1~bpo8+1",
+    "Filename": "pool/main/m/mesa/libgl1-mesa-dri_13.0.6-1~bpo8+1_armhf.deb",
+    "SHA256": "affd2e4b196a8b3ffbd1fba309a4e22e613207d35911a2d647a17ede4c85bd98",
+    "Depends": "libc6 (>= 2.17), libdrm-amdgpu1 (>= 2.4.63), libdrm-freedreno1 (>= 2.4.70), libdrm-nouveau2 (>= 2.4.66), libdrm-radeon1 (>= 2.4.31), libdrm2 (>= 2.4.66), libelf1 (>= 0.142), libexpat1 (>= 2.0.1), libgcc1 (>= 1:4.4.0), libllvm3.8, libsensors4 (>= 1:3.0.0), libstdc++6 (>= 4.9)"
+  },
+  {
+    "Package": "libstdc++6",
+    "Version": "4.9.2-10+deb8u1",
+    "Filename": "pool/main/g/gcc-4.9/libstdc++6_4.9.2-10+deb8u1_armhf.deb",
+    "SHA256": "0f1c6f9640a3c4b8c4cabd805f9e6974fd74aa7f054109cf88da2770ce098efc",
+    "Depends": "gcc-4.9-base (= 4.9.2-10+deb8u1), libc6 (>= 2.18), libgcc1 (>= 1:4.4.0)"
+  },
+  {
+    "Package": "libsensors4",
+    "Version": "1:3.3.5-2",
+    "Filename": "pool/main/l/lm-sensors/libsensors4_3.3.5-2_armhf.deb",
+    "SHA256": "e066a1252a253e34a155ca9a0d10e41d2911168b1cd2a8c2375b5e0925c7f4fc",
+    "Depends": "libc6 (>= 2.4)"
+  },
+  {
+    "Package": "libllvm3.8",
+    "Version": "1:3.8.1-12~bpo8+1",
+    "Filename": "pool/main/l/llvm-toolchain-3.8/libllvm3.8_3.8.1-12~bpo8+1_armhf.deb",
+    "SHA256": "d0163a8b6446fea184d434f01b6a36bfa5627c16f94eaf68fc774c0211936cf9",
+    "Depends": "libc6 (>= 2.15), libedit2 (>= 2.11-20080614), libffi6 (>= 3.0.4), libgcc1 (>= 1:4.4.0), libstdc++6 (>= 4.9), libtinfo5, zlib1g (>= 1:1.2.0)"
+  },
+  {
+    "Package": "zlib1g",
+    "Version": "1:1.2.8.dfsg-2+b1",
+    "Filename": "pool/main/z/zlib/zlib1g_1.2.8.dfsg-2+b1_armhf.deb",
+    "SHA256": "00e6d9f3671993ce9d69eec27816181f974a7859e547a1edc65ebba2d0273703",
+    "Depends": "libc6 (>= 2.4)"
+  },
+  {
+    "Package": "libtinfo5",
+    "Version": "5.9+20140913-1+deb8u3",
+    "Filename": "pool/main/n/ncurses/libtinfo5_5.9+20140913-1+deb8u3_armhf.deb",
+    "SHA256": "f6707c065096d68afe74c02a8a3917a0140cdf6ff31dfecc76c6dc8bf3c56efe",
+    "Depends": "libc6 (>= 2.15)"
+  },
+  {
+    "Package": "libedit2",
+    "Version": "3.1-20140620-2",
+    "Filename": "pool/main/libe/libedit/libedit2_3.1-20140620-2_armhf.deb",
+    "SHA256": "b7b8a57c8c5a47d4533f5969e6aa44496c80ff2efb79a964441de7a6491f1fbe",
+    "Depends": "libbsd0 (>= 0.0), libc6 (>= 2.17), libtinfo5"
+  },
+  {
+    "Package": "libbsd0",
+    "Version": "0.7.0-2",
+    "Filename": "pool/main/libb/libbsd/libbsd0_0.7.0-2_armhf.deb",
+    "SHA256": "ff4b6db63e7541df95d5c8a60aee0af85c523badb5a73a0379374e047a1f773e",
+    "Depends": "libc6 (>= 2.8)"
+  },
+  {
+    "Package": "libelf1",
+    "Version": "0.159-4.2",
+    "Filename": "pool/main/e/elfutils/libelf1_0.159-4.2_armhf.deb",
+    "SHA256": "831ec91035a2cab1d118e0adcf0f94bd59ed042bcf80f690ee294c174752505b",
+    "Depends": "libc6 (>= 2.4)"
+  },
+  {
+    "Package": "libdrm-radeon1",
+    "Version": "2.4.74-1~bpo8+1",
+    "Filename": "pool/main/libd/libdrm/libdrm-radeon1_2.4.74-1~bpo8+1_armhf.deb",
+    "SHA256": "187e9f8e56f799645c8d6f67f7137f6557161104e3011f80c00cbcc5cce0793a",
+    "Depends": "libc6 (>= 2.4), libdrm2 (>= 2.4.38)"
+  },
+  {
+    "Package": "libdrm-nouveau2",
+    "Version": "2.4.74-1~bpo8+1",
+    "Filename": "pool/main/libd/libdrm/libdrm-nouveau2_2.4.74-1~bpo8+1_armhf.deb",
+    "SHA256": "75e9d1ee3de65502000a1084a6258a67c2445926cacb831215dbae423b4c012e",
+    "Depends": "libc6 (>= 2.4), libdrm2 (>= 2.4.38)"
+  },
+  {
+    "Package": "libdrm-freedreno1",
+    "Version": "2.4.74-1~bpo8+1",
+    "Filename": "pool/main/libd/libdrm/libdrm-freedreno1_2.4.74-1~bpo8+1_armhf.deb",
+    "SHA256": "7a963fec0dbd9001a4c350c8e7e72fdc723bdd02c3eae1e479658331611e8c31",
+    "Depends": "libc6 (>= 2.17), libdrm2 (>= 2.4.38)"
+  },
+  {
+    "Package": "libdrm-amdgpu1",
+    "Version": "2.4.74-1~bpo8+1",
+    "Filename": "pool/main/libd/libdrm/libdrm-amdgpu1_2.4.74-1~bpo8+1_armhf.deb",
+    "SHA256": "ccb3d251d0dad9e34301ab30e16541e6ae5d5922e105a02257d4d725396789ed",
+    "Depends": "libc6 (>= 2.17), libdrm2 (>= 2.4.60)"
+  },
+  {
+    "Package": "libglapi-mesa",
+    "Version": "13.0.6-1~bpo8+1",
+    "Filename": "pool/main/m/mesa/libglapi-mesa_13.0.6-1~bpo8+1_armhf.deb",
+    "SHA256": "f8e32332befc06f631f7b0cebef9852d054a29f40e7a40d4c4d320c4a3e973c5",
+    "Depends": "libc6 (>= 2.4)"
+  },
+  {
+    "Package": "libgles2-mesa",
+    "Version": "13.0.6-1~bpo8+1",
+    "Filename": "pool/main/m/mesa/libgles2-mesa_13.0.6-1~bpo8+1_armhf.deb",
+    "SHA256": "73b75ddcb063d3443d7b1e9e8ba7ed17900505437cad94a1e159771accfc0df7",
+    "Depends": "libglapi-mesa (= 13.0.6-1~bpo8+1), libc6 (>= 2.4), libdrm2 (>= 2.3.1)"
+  },
+  {
+    "Package": "libegl1-mesa",
+    "Version": "13.0.6-1~bpo8+1",
+    "Filename": "pool/main/m/mesa/libegl1-mesa_13.0.6-1~bpo8+1_armhf.deb",
+    "SHA256": "c085acbc992569de64c97ad9085c30d04c4c35edb437dcb20a027078cd082d32",
+    "Depends": "libc6 (>= 2.17), libdrm2 (>= 2.4.66), libexpat1 (>= 2.0.1), libgbm1 (= 13.0.6-1~bpo8+1), libwayland-client0 (>= 1.3.92), libwayland-server0 (>= 1.2.0), libx11-6, libx11-xcb1, libxcb-dri2-0 (>= 1.8), libxcb-dri3-0, libxcb-present0, libxcb-render0, libxcb-shape0, libxcb-sync1, libxcb-xfixes0, libxcb1 (>= 1.9.2), libxshmfence1"
+  },
+  {
+    "Package": "libxshmfence1",
+    "Version": "1.1-4",
+    "Filename": "pool/main/libx/libxshmfence/libxshmfence1_1.1-4_armhf.deb",
+    "SHA256": "8f4aab6c98907d8b23df2d5fd53c071f95ba71c550484c74382fbda9d5020896",
+    "Depends": "libc6 (>= 2.4)"
+  },
+  {
+    "Package": "libxcb1",
+    "Version": "1.10-3+b1",
+    "Filename": "pool/main/libx/libxcb/libxcb1_1.10-3+b1_armhf.deb",
+    "SHA256": "6f5c3a6e93329e4786b12be4d055f20ebaa5a2c0a90aabee070a1fbe3825fe67",
+    "Depends": "libc6 (>= 2.4), libxau6, libxdmcp6"
+  },
+  {
+    "Package": "libxdmcp6",
+    "Version": "1:1.1.1-1+b1",
+    "Filename": "pool/main/libx/libxdmcp/libxdmcp6_1.1.1-1+b1_armhf.deb",
+    "SHA256": "c6b3a0af35740048006f4f61f3b0ee3463164f0a6a792e9273d6f2b9a3905fef",
+    "Depends": "libc6 (>= 2.4)"
+  },
+  {
+    "Package": "libxau6",
+    "Version": "1:1.0.8-1",
+    "Filename": "pool/main/libx/libxau/libxau6_1.0.8-1_armhf.deb",
+    "SHA256": "5c0395d79cf16acb86708ed37fa5bf31734cde01771a5d226c7a89f611108bf7",
+    "Depends": "libc6 (>= 2.4)"
+  },
+  {
+    "Package": "libxcb-xfixes0",
+    "Version": "1.10-3+b1",
+    "Filename": "pool/main/libx/libxcb/libxcb-xfixes0_1.10-3+b1_armhf.deb",
+    "SHA256": "75e7db35ff63b29bb4767fe7216144898f2113bd11e2c2ea6717d0cfb14b1f50",
+    "Depends": "libc6 (>= 2.4), libxcb1"
+  },
+  {
+    "Package": "libxcb-sync1",
+    "Version": "1.10-3+b1",
+    "Filename": "pool/main/libx/libxcb/libxcb-sync1_1.10-3+b1_armhf.deb",
+    "SHA256": "f11663467d310f2ef920a42a1238ae13624c64e9feeb90efc547e456df96c998",
+    "Depends": "libc6 (>= 2.4), libxcb1"
+  },
+  {
+    "Package": "libxcb-shape0",
+    "Version": "1.10-3+b1",
+    "Filename": "pool/main/libx/libxcb/libxcb-shape0_1.10-3+b1_armhf.deb",
+    "SHA256": "e485e77fca669ef7fff25255a2d94dd209a2202b53197f8edbeaed1d693026af",
+    "Depends": "libc6 (>= 2.4), libxcb1"
+  },
+  {
+    "Package": "libxcb-render0",
+    "Version": "1.10-3+b1",
+    "Filename": "pool/main/libx/libxcb/libxcb-render0_1.10-3+b1_armhf.deb",
+    "SHA256": "bd4a65e3ba27524d8edf3748cb708ba0611336995af5392a4eb5403455854fde",
+    "Depends": "libc6 (>= 2.4), libxcb1 (>= 1.8)"
+  },
+  {
+    "Package": "libxcb-present0",
+    "Version": "1.10-3+b1",
+    "Filename": "pool/main/libx/libxcb/libxcb-present0_1.10-3+b1_armhf.deb",
+    "SHA256": "d3d4065d41ebbacf2e5d207ef125050f27261e6f2f4e9b42b88f230b98c41e29",
+    "Depends": "libc6 (>= 2.4), libxcb1"
+  },
+  {
+    "Package": "libxcb-dri3-0",
+    "Version": "1.10-3+b1",
+    "Filename": "pool/main/libx/libxcb/libxcb-dri3-0_1.10-3+b1_armhf.deb",
+    "SHA256": "a2d7fb6aac68a5ae1f096c2e65c4e975d2ffb81c2e37e9a727df1c259d1efd09",
+    "Depends": "libc6 (>= 2.4), libxcb1 (>= 1.9.2)"
+  },
+  {
+    "Package": "libxcb-dri2-0",
+    "Version": "1.10-3+b1",
+    "Filename": "pool/main/libx/libxcb/libxcb-dri2-0_1.10-3+b1_armhf.deb",
+    "SHA256": "5906d9cc3a70f0070e66c62973223f21158de0496d1a04e173ae0d5f7b421f63",
+    "Depends": "libc6 (>= 2.4), libxcb1"
+  },
+  {
+    "Package": "libx11-xcb1",
+    "Version": "2:1.6.2-3+deb8u1",
+    "Filename": "pool/main/libx/libx11/libx11-xcb1_1.6.2-3+deb8u1_armhf.deb",
+    "SHA256": "e79b8083a4e4b37306855421062e71ac78bf56d3bc46543ba37351c4a8e38250",
+    "Depends": "libc6 (>= 2.4), libx11-6"
+  },
+  {
+    "Package": "libx11-6",
+    "Version": "2:1.6.2-3+deb8u1",
+    "Filename": "pool/main/libx/libx11/libx11-6_1.6.2-3+deb8u1_armhf.deb",
+    "SHA256": "29b2da94d351278e0682f86b290724998b6aace8dd730a23930feb5ad11662e7",
+    "Depends": "libc6 (>= 2.15), libxcb1 (>= 1.2), libx11-data"
+  },
+  {
+    "Package": "x11-xkb-utils",
+    "Version": "7.7+1",
+    "Filename": "pool/main/x/x11-xkb-utils/x11-xkb-utils_7.7+1_armhf.deb",
+    "SHA256": "4e081415926a479d8774188c97622b13081b9facdbff34e4fb88df8150298831",
+    "Depends": "libc6 (>= 2.7), libx11-6, libxaw7, libxkbfile1, libxt6"
+  },
+  {
+    "Package": "libselinux1",
+    "Version": "2.3-2",
+    "Filename": "pool/main/libs/libselinux/libselinux1_2.3-2_armhf.deb",
+    "SHA256": "d01c86277c3929c700f0889632f839929f381d75a0a28e4223ac28cdb12535a3",
+    "Depends": "libc6 (>= 2.8), libpcre3 (>= 8.10)"
+  },
+  {
+    "Package": "libpcre3",
+    "Version": "2:8.35-3.3+deb8u4",
+    "Filename": "pool/main/p/pcre3/libpcre3_8.35-3.3+deb8u4_armhf.deb",
+    "SHA256": "e4f82a27ba0d9aa0f1e181e8f9b6624847275bbc38b47dcf19096e7c036609f7",
+    "Depends": "libc6 (>= 2.4)"
+  },
+  {
+    "Package": "libbz2-1.0",
+    "Version": "1.0.6-7+b3",
+    "Filename": "pool/main/b/bzip2/libbz2-1.0_1.0.6-7+b3_armhf.deb",
+    "SHA256": "c56314c9e4eca39d211911416111cda3e0ba455a03908ee546d1aba177550d00",
+    "Depends": "libc6 (>= 2.4)"
+  },
+  {
+    "Package": "libaudit1",
+    "Version": "1:2.4-1+b1",
+    "Filename": "pool/main/a/audit/libaudit1_2.4-1+b1_armhf.deb",
+    "SHA256": "9f903d0294ed09a5f36966c69db7bbc8ace8fe448cee1817690eccd964b22007",
+    "Depends": "libaudit-common (>= 1:2.4-1), libc6 (>= 2.8)"
+  },
+  {
+    "Package": "libxkbfile1",
+    "Version": "1:1.0.8-1",
+    "Filename": "pool/main/libx/libxkbfile/libxkbfile1_1.0.8-1_armhf.deb",
+    "SHA256": "4a3cb102ed9180aa997149c016fdcd067f13c35472a811f05915eaba905e1d99",
+    "Depends": "libc6 (>= 2.13-28), libx11-6"
+  },
+  {
+    "Package": "libxext6",
+    "Version": "2:1.3.3-1",
+    "Filename": "pool/main/libx/libxext/libxext6_1.3.3-1_armhf.deb",
+    "SHA256": "c98094a2dcc1965bb04ed8929fca6899e1cad3ad1e0f29a5c20a79338dacb702",
+    "Depends": "libc6 (>= 2.4), libx11-6 (>= 2:1.6.0)"
+  },
+  {
+    "Package": "xkb-data",
+    "Version": "2.12-1",
+    "Filename": "pool/main/x/xkeyboard-config/xkb-data_2.12-1_all.deb",
+    "SHA256": "57c41945a76d9620af0df4dcb0aa7e62e1be9fa69b433fd0a577e116abcb28d3"
+  },
+  {
+    "Package": "xvfb",
+    "Version": "2:1.16.4-1+deb8u2",
+    "Filename": "pool/main/x/xorg-server/xvfb_1.16.4-1+deb8u2_armhf.deb",
+    "SHA256": "be5c4e827d645be67b5ba10683a2d035d05ce3af81f8a74f3e35332655c72c63",
+    "Depends": "xserver-common (>= 2:1.16.4-1+deb8u2), libaudit1 (>= 1:2.2.1), libc6 (>= 2.17), libgcrypt20 (>= 1.6.1), libgl1-mesa-glx | libgl1, libpixman-1-0 (>= 0.30.0), libselinux1 (>= 2.0.82), libxau6, libxdmcp6, libxfont1 (>= 1:1.4.2), libxshmfence1"
+  },
+  {
+    "Package": "libxfont1",
+    "Version": "1:1.5.1-1+deb8u1",
+    "Filename": "pool/main/libx/libxfont/libxfont1_1.5.1-1+deb8u1_armhf.deb",
+    "SHA256": "25f8d26f4e3b425de4943cf54853f69966f4bdb3546a23a5835fb20824651b9f",
+    "Depends": "libbz2-1.0, libc6 (>= 2.4), libfontenc1, libfreetype6 (>= 2.2.1), zlib1g (>= 1:1.1.4)"
+  },
+  {
+    "Package": "libfreetype6",
+    "Version": "2.5.2-3+deb8u2",
+    "Filename": "pool/main/f/freetype/libfreetype6_2.5.2-3+deb8u2_armhf.deb",
+    "SHA256": "75dbd9430ea3bb67f690a3e31f5d719458bbc80ea57e61d3eeeb46da61f6758d",
+    "Depends": "libc6 (>= 2.11), libpng12-0 (>= 1.2.13-4), zlib1g (>= 1:1.1.4)"
+  },
+  {
+    "Package": "libpng12-0",
+    "Version": "1.2.50-2+deb8u3",
+    "Filename": "pool/main/libp/libpng/libpng12-0_1.2.50-2+deb8u3_armhf.deb",
+    "SHA256": "ab9382787c8a47c40528db5d904e249943de75b47188d9f30084f1ac1631f0aa",
+    "Depends": "libc6 (>= 2.11), zlib1g (>= 1:1.1.4)"
+  },
+  {
+    "Package": "libfontenc1",
+    "Version": "1:1.1.2-1+b2",
+    "Filename": "pool/main/libf/libfontenc/libfontenc1_1.1.2-1+b2_armhf.deb",
+    "SHA256": "c32ad72df3bc338a565ce506644c1956843353fa9f5691951658664b5c1c0665",
+    "Depends": "libc6 (>= 2.7), zlib1g (>= 1:1.1.4)"
+  },
+  {
+    "Package": "libpixman-1-0",
+    "Version": "0.32.6-3",
+    "Filename": "pool/main/p/pixman/libpixman-1-0_0.32.6-3_armhf.deb",
+    "SHA256": "2a859af99ce3e90ebd06ce39acad0bb21ca345410cb3f5d524b74e4150edbbb9",
+    "Depends": "libc6 (>= 2.4)"
+  },
+  {
+    "Package": "libgl1-mesa-glx",
+    "Version": "13.0.6-1~bpo8+1",
+    "Filename": "pool/main/m/mesa/libgl1-mesa-glx_13.0.6-1~bpo8+1_armhf.deb",
+    "SHA256": "fa63bb1098b7e194ce0888f19de3458ed2456e97cea0dfd4f2b914b35e1b257f",
+    "Depends": "libc6 (>= 2.8), libdrm2 (>= 2.4.66), libexpat1 (>= 2.0.1), libglapi-mesa (= 13.0.6-1~bpo8+1), libx11-6 (>= 2:1.4.99.1), libx11-xcb1, libxcb-dri2-0 (>= 1.8), libxcb-dri3-0, libxcb-glx0 (>= 1.8), libxcb-present0, libxcb-sync1, libxcb1 (>= 1.9.2), libxdamage1 (>= 1:1.1), libxext6, libxfixes3, libxshmfence1, libxxf86vm1"
+  },
+  {
+    "Package": "libxxf86vm1",
+    "Version": "1:1.1.3-1+b1",
+    "Filename": "pool/main/libx/libxxf86vm/libxxf86vm1_1.1.3-1+b1_armhf.deb",
+    "SHA256": "6b54fb9f549fe935dca3b1c2ca8eb4a5605e2534ae0a84bfc47c62d2c178a877",
+    "Depends": "libc6 (>= 2.4), libx11-6 (>= 2:1.6.0), libxext6"
+  },
+  {
+    "Package": "libxfixes3",
+    "Version": "1:5.0.1-2+deb8u1",
+    "Filename": "pool/main/libx/libxfixes/libxfixes3_5.0.1-2+deb8u1_armhf.deb",
+    "SHA256": "fda5f4b0cd09388acab581e59c2064e0398e23f3677c06ab82477ac615759016",
+    "Depends": "libc6 (>= 2.4), libx11-6 (>= 2:1.6.0)"
+  },
+  {
+    "Package": "libxdamage1",
+    "Version": "1:1.1.4-2+b1",
+    "Filename": "pool/main/libx/libxdamage/libxdamage1_1.1.4-2+b1_armhf.deb",
+    "SHA256": "fb172459c34f154c82b9681da1af1b295900bc2f4a1938a9c269b4e40b960d79",
+    "Depends": "libc6 (>= 2.4), libx11-6 (>= 2:1.4.99.1), libxfixes3"
+  },
+  {
+    "Package": "libxcb-glx0",
+    "Version": "1.10-3+b1",
+    "Filename": "pool/main/libx/libxcb/libxcb-glx0_1.10-3+b1_armhf.deb",
+    "SHA256": "7778912b53bd5da079f7d8e7d32e260b265a3ca731a0fc38bc2a0dd260e3a68a",
+    "Depends": "libc6 (>= 2.4), libxcb1"
+  },
+  {
+    "Package": "libgcrypt20",
+    "Version": "1.7.6-1~bpo8+1",
+    "Filename": "pool/main/libg/libgcrypt20/libgcrypt20_1.7.6-1~bpo8+1_armhf.deb",
+    "SHA256": "ffb6f5c728bbb68a526c7a91c61dde0db3cd8e7fbe6e343f0dd60c60f44bb9f4",
+    "Depends": "libc6 (>= 2.15), libgpg-error0 (>= 1.14)"
+  },
+  {
+    "Package": "libgpg-error0",
+    "Version": "1.26-2~bpo8+1",
+    "Filename": "pool/main/libg/libgpg-error/libgpg-error0_1.26-2~bpo8+1_armhf.deb",
+    "SHA256": "9f4e387add8c775b33ac8de79e2611f43c953b4787d40d132d6ff5cd74e8ebcd",
+    "Depends": "libc6 (>= 2.15)"
+  },
+  {
+    "Package": "gcc-4.9-base",
+    "Version": "4.9.2-10+deb8u1",
+    "Filename": "pool/main/g/gcc-4.9/gcc-4.9-base_4.9.2-10+deb8u1_armhf.deb",
+    "SHA256": "8264d56a62849c8002f6661817b101b99c7e91c4b357aa57c42037e14b395b5a"
+  }
+]

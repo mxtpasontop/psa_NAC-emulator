@@ -24,7 +24,8 @@ def synthetic_dtb():
     end = struct.pack('>I', 2)
     body = node('')+prop('compatible', b'fsl,imx6q-wave2\0')
     body += node('fb@0')+prop('status', b'okay\0')+end
-    body += node('soc')+node('aips-bus@02100000')+node('usdhc@0219c000')
+    body += node('soc')+node('busfreq')+prop('compatible',b'fsl,imx6_busfreq\0')+end
+    body += node('aips-bus@02100000')+node('usdhc@0219c000')
     body += prop('status', b'disabled\0')+prop('bus-width', struct.pack('>I', 8))
     body += end*4+struct.pack('>I', 9)
     strings_offset = 56+len(body)
@@ -65,6 +66,8 @@ class DeviceTreeTests(unittest.TestCase):
         modify(headless(synthetic_dtb()), collect)
         self.assertEqual(properties['', 'compatible'], b'fsl,imx6q\0')
         self.assertEqual(properties['/fb@0', 'status'], b'disabled\0')
+        self.assertEqual(properties['/soc/busfreq', 'compatible'], b'nac-emulator,unimplemented\0')
+        self.assertEqual(properties['/soc/busfreq', 'status'], b'disabled\0')
         sd = '/soc/aips-bus@02100000/usdhc@0219c000'
         self.assertEqual(properties[sd, 'status'], b'okay\0')
         self.assertEqual(properties[sd, 'bus-width'], struct.pack('>I', 4))
@@ -89,6 +92,17 @@ class DeviceTreeTests(unittest.TestCase):
 
 
 class PayloadTests(unittest.TestCase):
+    def test_diagnostic_profile_excludes_only_requested_subtree(self):
+        with tempfile.TemporaryDirectory() as folder:
+            directory = Path(folder)
+            (directory/'mesa').mkdir()
+            (directory/'mesa/lib.so').write_bytes(b'render only')
+            (directory/'mesa-notes').write_bytes(b'keep')
+            files = read_newc(gzip.decompress(pack(b'', directory, ['mesa'])))
+            self.assertNotIn('nac/mesa', files)
+            self.assertNotIn('nac/mesa/lib.so', files)
+            self.assertEqual(files['nac/mesa-notes'][1], b'keep')
+
     def test_payload_is_deterministic_executable_and_filters_analysis_files(self):
         with tempfile.TemporaryDirectory() as folder:
             directory = Path(folder)

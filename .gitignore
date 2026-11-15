@@ -14,6 +14,10 @@ guest/assets/
 guest/logger/*.so
 guest/strace
 guest/qt-probe
+guest/egl-probe
+guest/qt-render-probe
+guest/libNacEglBridge.so
+guest/mesa/
 *.idb
 *.i64
 *.id0

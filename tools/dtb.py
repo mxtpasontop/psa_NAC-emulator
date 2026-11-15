@@ -93,13 +93,14 @@ def headless(blob):
             return struct.pack('>I', 4)
         absent = any(part in path for part in
                      ('/ipu@', '/gpu@', '/ldb@', '/pre@', '/prg@', '/fb@',
-                      '/lvds_display_driver', '/v4l2_', '/contiwdog', '/vlowhandler'))
+                      '/lvds_display_driver', '/v4l2_', '/contiwdog', '/vlowhandler', '/busfreq'))
         if absent and name == 'status':
             return b'disabled\0'
         if absent and name == 'compatible':
             return b'nac-emulator,unimplemented\0'
         return value
     return modify(blob, patch, {
+        '/soc/busfreq': {'status': b'disabled\0'},
         '/soc/aips-bus@02100000/usdhc@0219c000': {
             'pinctrl-names': b'default\0', 'pinctrl-0': b'', 'non-removable': b''
         }

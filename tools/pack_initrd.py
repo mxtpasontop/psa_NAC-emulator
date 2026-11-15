@@ -14,9 +14,12 @@ def record(name, data=b'', mode=stat.S_IFREG | 0o755, inode=1):
     return result
 
 
-def pack(original, directory):
+def pack(original, directory, excludes=()):
     overlay = bytearray(record('nac', mode=stat.S_IFDIR | 0o755))
     for inode, path in enumerate(sorted(directory.rglob('*')), 2):
+        relative = path.relative_to(directory).as_posix()
+        if any(relative == item or relative.startswith(item.rstrip('/')+'/') for item in excludes):
+            continue
         if path.suffix in ('.idb', '.i64', '.id0', '.id1', '.id2', '.nam', '.til', '.o'):
             continue
         if path.is_symlink():
@@ -39,8 +42,9 @@ if __name__ == '__main__':
     parser.add_argument('directory', type=Path)
     parser.add_argument('output', type=Path)
     parser.add_argument('--original', type=Path, default=Path(__file__).resolve().parents[1]/'images/earlyaudio.cpio')
+    parser.add_argument('--exclude', action='append', default=[], help='Exclude a relative payload path and its children')
     args = parser.parse_args()
     if not args.directory.is_dir() or args.original.resolve() == args.output.resolve():
         parser.error('Supply a payload directory and a separate output file')
-    args.output.write_bytes(pack(args.original.read_bytes(), args.directory))
+    args.output.write_bytes(pack(args.original.read_bytes(), args.directory, args.exclude))
     print(f'Created {args.output}: {args.output.stat().st_size:,} bytes')
