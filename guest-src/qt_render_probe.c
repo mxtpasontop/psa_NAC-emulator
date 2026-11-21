@@ -22,6 +22,7 @@ int main(int argc, char **argv) {
     QT(unsigned char, context_create, "_ZN14QOpenGLContext6createEv", (void *));
     QT(unsigned char, make_current, "_ZN14QOpenGLContext11makeCurrentEP8QSurface", (void *,void *));
     QT(void, done_current, "_ZN14QOpenGLContext11doneCurrentEv", (void *));
+    QT(void, swap_buffers, "_ZN14QOpenGLContext11swapBuffersEP8QSurface", (void *,void *));
     QT(void, device_ctor, "_ZN18QOpenGLPaintDeviceC1Eii", (void *,int,int));
     QT(void, device_dtor, "_ZN18QOpenGLPaintDeviceD1Ev", (void *));
     QT(void, painter_ctor, "_ZN8QPainterC1EP12QPaintDevice", (void *,void *));
@@ -76,6 +77,50 @@ int main(int argc, char **argv) {
     fprintf(frame,"P6\n800 480\n255\n");
     for(int y=479;y>=0;y--) for(int x=0;x<800;x++) fwrite(pixels+(y*800+x)*4,1,3,frame);
     fclose(frame);
+    /* Put non-default GL readback state in place. The presentation capture
+     * must read the window, preserve this state, and match the direct image. */
+    void (*get_integer)(unsigned,int *)=dlsym(gles,"glGetIntegerv");
+    void (*pixel_store)(unsigned,int)=dlsym(gles,"glPixelStorei");
+    void (*gen_framebuffers)(int,unsigned *)=dlsym(gles,"glGenFramebuffers");
+    void (*bind_framebuffer)(unsigned,unsigned)=dlsym(gles,"glBindFramebuffer");
+    void (*delete_framebuffers)(int,const unsigned *)=dlsym(gles,"glDeleteFramebuffers");
+    void (*gen_buffers)(int,unsigned *)=dlsym(gles,"glGenBuffers");
+    void (*bind_buffer)(unsigned,unsigned)=dlsym(gles,"glBindBuffer");
+    void (*buffer_data)(unsigned,__PTRDIFF_TYPE__,const void *,unsigned)=dlsym(gles,"glBufferData");
+    void (*delete_buffers)(int,const unsigned *)=dlsym(gles,"glDeleteBuffers");
+    if (!get_integer || !pixel_store || !gen_framebuffers || !bind_framebuffer ||
+        !delete_framebuffers || !gen_buffers || !bind_buffer || !buffer_data || !delete_buffers) return 9;
+    const unsigned char *version=get_string(0x1f02);
+    int es3=version && version[10]>='3' && version[10]<='9';
+    unsigned read_target=es3 ? 0x8ca8 : 0x8d40;
+    unsigned read_fbo=0,pack_buffer=0;
+    gen_framebuffers(1,&read_fbo);
+    bind_framebuffer(read_target,read_fbo);
+    pixel_store(0x0d05,8);
+    if (es3) {
+        gen_buffers(1,&pack_buffer);
+        bind_buffer(0x88eb,pack_buffer);
+        buffer_data(0x88eb,2*1024*1024,NULL,0x88e1);
+        pixel_store(0x0d02,803);pixel_store(0x0d03,1);pixel_store(0x0d04,1);
+    }
+    swap_buffers(context,(char *)window+8);
+    int actual=0;
+    get_integer(es3 ? 0x8caa : 0x8ca6,&actual);
+    if ((unsigned)actual!=read_fbo) return 10;
+    get_integer(0x0d05,&actual);
+    if (actual!=8) return 10;
+    if (es3) {
+        get_integer(0x88ed,&actual);if((unsigned)actual!=pack_buffer) return 10;
+        get_integer(0x0d02,&actual);if(actual!=803) return 10;
+        get_integer(0x0d03,&actual);if(actual!=1) return 10;
+        get_integer(0x0d04,&actual);if(actual!=1) return 10;
+        bind_buffer(0x88eb,0);delete_buffers(1,&pack_buffer);
+        pixel_store(0x0d02,0);pixel_store(0x0d03,0);pixel_store(0x0d04,0);
+    }
+    pixel_store(0x0d05,4);
+    bind_framebuffer(read_target,0);delete_framebuffers(1,&read_fbo);
+    if (get_error()) return 10;
+    puts("NAC_EGL_CAPTURE_STATE_OK");
     free(pixels);
     device_dtor(device);
     done_current(context);

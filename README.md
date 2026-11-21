@@ -19,8 +19,9 @@ longer HMI probe starts the native Node State Manager and application framework,
 verifies their D-Bus service registrations, and reaches the master's own public
 D-Bus service registration beyond that checkpoint. The optional
 Mesa/Xvfb overlay renders a verified 800×480 test scene through the
-firmware's own Qt OpenGL paint engine. The full Peugeot touchscreen interface
-is not running and no HMI frame has been rendered.
+firmware's own Qt OpenGL paint engine. The native display probe can also
+capture the display application's EGL surface while the full touchscreen
+interface is still in development.
 This is a development environment for rehosting the actual firmware.
 
 | Capability | Status |
@@ -194,6 +195,25 @@ zone-monitor paths remain visible in the native logs. Check
 `logs/hmi-check.json` and `logs/hmi-check-serial.log` for your run's actual results.
 All changes remain inside temporary guest filesystems; the root filesystem is
 mounted read-only in this mode.
+
+## Probe the native display application
+
+Rebuild the renderer payload, then run the combined probe from the firmware folder.
+
+```powershell
+python .\nac-emulator\tools\prepare_render.py
+python .\nac-emulator\tools\run.py --hmi-display-probe --seconds 120 --command-timeout 240 --observe-seconds 150 --name hmi-display-check
+```
+
+The probe starts the native HMI services and Surface Manager with the firmware
+libraries. It then launches `HMIInternalApplication` with Mesa software EGL after
+the master registers on D-Bus. It collects Surface Manager and display-app logs
+in `logs/hmi-display-check-serial.log`, with startup and frame results in
+`logs/hmi-display-check.json`. If the app presents a frame, the probe writes
+`logs/hmi-display-check-display.png`. A captured surface can be incomplete or
+blank. The probe omits the Internet HMI group plugin after a startup crash
+with the InternetDataService absent. This change takes place inside the
+temporary QEMU snapshot.
 
 ## Probe software graphics
 

@@ -5,10 +5,22 @@ import subprocess
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'tools'))
-from hmi_report import summarize
+from hmi_report import summarize, summarize_display
 
 
 class HmiReportTests(unittest.TestCase):
+    def test_display_report_only_attributes_egl_to_the_native_display_process(self):
+        unrelated = '\nNAC_QT_PBUFFER_CREATED=800x480\n'
+        display_log = ('\nNAC_HMI_DISPLAY_LOG_BEGIN\r\nNAC_HMI_DISPLAY_LAUNCH\r\n'
+                       'NAC_HMI_DISPLAY_EXIT=127\r\nNAC_HMI_DISPLAY_LOG_END\r\n'
+                       'NAC_HMI_DISPLAY_END\r\n')
+        report = summarize_display(unrelated + display_log)
+        self.assertTrue(report['hmi_display_probe_complete'])
+        self.assertTrue(report['hmi_display_launch_observed'])
+        self.assertEqual(report['hmi_display_exit_code'], 127)
+        self.assertFalse(report['hmi_display_egl_surface_created'])
+        self.assertFalse(report['hmi_display_frame_captured'])
+
     def test_cli_rejects_mixed_modes_without_touching_firmware(self):
         script = Path(__file__).resolve().parents[1]/'tools/run.py'
         result = subprocess.run([sys.executable,str(script),'--ui-probe','--hmi-probe'],

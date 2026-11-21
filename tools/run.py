@@ -8,7 +8,7 @@ import socket
 import subprocess
 import time
 from frames import read_frame, png_bytes
-from hmi_report import summarize as summarize_hmi
+from hmi_report import summarize as summarize_hmi, summarize_display
 
 BASE = Path(__file__).resolve().parents[1]
 
@@ -27,8 +27,9 @@ def main():
     parser.add_argument('--ui-probe', action='store_true', help='Probe the native Qt and HMI processes using the prepared diagnostic initramfs')
     parser.add_argument('--render-probe', action='store_true', help='Test software GLES pixels with the isolated Mesa overlay')
     parser.add_argument('--hmi-probe', action='store_true', help='Observe native HMI and framework services beyond the early startup checkpoint')
+    parser.add_argument('--hmi-display-probe', action='store_true', help='Launch the native HMI display app with software EGL and collect any frame')
     args = parser.parse_args()
-    if sum((args.ui_probe, args.render_probe, args.hmi_probe)) > 1:
+    if sum((args.ui_probe, args.render_probe, args.hmi_probe, args.hmi_display_probe)) > 1:
         parser.error('Choose one diagnostic mode')
     if args.ui_probe or args.hmi_probe:
         args.rootfs = True
@@ -38,16 +39,19 @@ def main():
             parser.error('Run tools/prepare_ui.py first')
         if args.hmi_probe and not args.observe_seconds:
             args.observe_seconds = 60
-    if args.render_probe:
+    if args.render_probe or args.hmi_display_probe:
         args.rootfs = True
         args.initrd = BASE/'images/render.cpio.gz'
         args.commands = BASE/'tools/enter-guest.sh'
         if not args.initrd.exists():
             parser.error('Run tools/prepare_render.py first')
+        if args.hmi_display_probe and not args.observe_seconds:
+            args.observe_seconds = 150
     if not 1 <= args.seconds <= 300:
         parser.error('seconds must be between 1 and 300')
     if args.command_timeout is None:
-        args.command_timeout = 180 if (args.ui_probe or args.render_probe or args.hmi_probe) else 10
+        firmware_probe = args.ui_probe or args.render_probe or args.hmi_probe or args.hmi_display_probe
+        args.command_timeout = 180 if firmware_probe else 10
     if not 1 <= args.command_timeout <= 300:
         parser.error('command-timeout must be between 1 and 300')
     if not 0 <= args.observe_seconds <= 300:
@@ -138,6 +142,8 @@ def main():
                     commands += 'NAC_GUEST_ENTRY=render.sh\nNAC_ROOTFS_MODE=rw\n'
                 if args.hmi_probe:
                     commands += 'NAC_GUEST_ENTRY=hmi-start.sh\n'
+                if args.hmi_display_probe:
+                    commands += 'NAC_GUEST_ENTRY=hmi-display-start.sh\nNAC_ROOTFS_MODE=rw\n'
                 if args.commands:
                     commands += args.commands.read_text().replace('\r', '')+'\n'
                 def execute_line(line):
@@ -163,6 +169,8 @@ def main():
                         time.sleep(.1)
                 if args.hmi_probe:
                     console += execute_line('/mnt/root/bin/busybox chroot /mnt/root /bin/sh /tmp/nac/hmi-collect.sh')
+                if args.hmi_display_probe:
+                    console += execute_line('/mnt/root/bin/busybox chroot /mnt/root /bin/sh /tmp/nac/hmi-display-collect.sh')
                 qmp('stop')
                 console += receive()
                 serial.write_text(console.replace('\r\n', '\n').replace('\r', ''))
@@ -173,9 +181,23 @@ def main():
                     report['hmi_master_started'] = 'UIFwkMasterProcess::main Starting' in console
                     report['graphics_probe_complete'] = '\nNAC_GRAPHICS_DIAG_END\n' in console.replace('\r', '')
                     report['rendered_frame_verified'] = False
-                if args.hmi_probe:
+                if args.hmi_probe or args.hmi_display_probe:
                     report.update(summarize_hmi(console))
                     report['observe_seconds'] = args.observe_seconds
+                if args.hmi_display_probe:
+                    report.update(summarize_display(console))
+                    if '\nNAC_HMI_DISPLAY_FRAME_BEGIN\n' in console.replace('\r', ''):
+                        try:
+                            pixels = read_frame(console, 'NAC_HMI_DISPLAY_FRAME', 800, 480, compressed=True)
+                            frame = logs/f'{args.name}-display.png'
+                            frame.write_bytes(png_bytes(pixels, 800, 480))
+                            report['hmi_display_frame_captured'] = True
+                            rgb = pixels[len(b'P6\n800 480\n255\n'):]
+                            report['hmi_display_frame_uniform'] = rgb == rgb[:3] * (800 * 480)
+                            report['frame_kind'] = 'native_display_app_surface'
+                            report['frame_file'] = str(frame)
+                        except (ValueError, OSError, EOFError) as error:
+                            report['frame_error'] = str(error)
                 if args.render_probe:
                     report['software_gles_verified'] = '\nNAC_SOFTWARE_GLES_OK\n' in console.replace('\r', '')
                     report['graphics_probe_complete'] = '\nNAC_RENDER_DIAG_END\n' in console.replace('\r', '')
@@ -192,6 +214,12 @@ def main():
                         report['rendered_frame_verified'] = report['qt_software_paint_verified']
                         report['frame_kind'] = 'qt_paint_test_scene'
                         report['frame_file'] = str(frame)
+                        if '\nNAC_SWAP_CAPTURE_PROBE\n' in console.replace('\r', ''):
+                            report['swap_capture_verified'] = False
+                            swap_pixels = read_frame(console, 'NAC_SWAP_FRAME', 800, 480, compressed=True)
+                            report['swap_capture_verified'] = (swap_pixels == qt_pixels and
+                                                               '\nNAC_EGL_SWAP_CAPTURE_OK\n' in console.replace('\r', '') and
+                                                               '\nNAC_EGL_CAPTURE_STATE_OK\n' in console.replace('\r', ''))
                     except (ValueError, OSError, EOFError) as error:
                         report['frame_error'] = str(error)
                 report['registers'] = qmp('human-monitor-command', {'command-line':'info registers'})
@@ -212,26 +240,35 @@ def main():
                     process.wait(timeout=5)
             report['exit_code'] = process.returncode
             (logs/f'{args.name}.json').write_text(json.dumps(report, indent=2)+'\n')
-    visible_log = re.sub(r'(NAC_(?:QT_)?FRAME)_BEGIN\n.*?\n\1_END',
+    visible_log = re.sub(r'(NAC_(?:QT_|SWAP_|HMI_DISPLAY_)?FRAME)_BEGIN\n.*?\n\1_END',
                          r'\1: [frame payload saved in serial log]',
                          serial.read_text(errors='replace'), flags=re.DOTALL)
     print(visible_log[-1800:])
     print(f'Diagnostics saved to {logs/args.name}.json')
     if report.get('frame_file'):
-        print(f'Qt diagnostic scene saved to {report["frame_file"]}')
+        print(f'Captured frame saved to {report["frame_file"]}')
     if args.hmi_probe:
         print('Native HMI observation: '+json.dumps({key: report[key] for key in (
             'hmi_master_alive', 'native_nsm_on_bus', 'native_framework_on_bus',
             'hmi_settings_shared_memory_created', 'native_hmi_on_bus',
             'hmi_bus_ping_verified', 'hmi_frame_verified')}))
+    if args.hmi_display_probe:
+        print('Native display observation: '+json.dumps({key: report[key] for key in (
+            'native_hmi_on_bus', 'hmi_zone_memory_attached', 'hmi_display_launch_observed',
+            'hmi_display_egl_surface_created', 'hmi_display_probe_complete',
+            'hmi_display_frame_captured', 'hmi_frame_verified')}))
+        if report.get('hmi_display_frame_uniform'):
+            print('The captured display surface has a single colour.')
     if not report.get('shell_verified'):
         raise SystemExit('Shell verification failed; inspect the diagnostic logs')
     if args.ui_probe and not (report.get('qt_offscreen_verified') and report.get('hmi_master_started') and report.get('graphics_probe_complete')):
         raise SystemExit('Native UI diagnostic did not complete successfully; inspect the logs')
     if args.hmi_probe and not (report.get('qt_offscreen_verified') and report.get('hmi_master_started') and report.get('hmi_probe_complete')):
         raise SystemExit('HMI observation did not complete successfully; inspect the logs')
+    if args.hmi_display_probe and not (report.get('hmi_display_probe_complete') and report.get('hmi_display_launch_observed')):
+        raise SystemExit('Native display launch not observed; inspect the logs and rebuild the render payload if needed')
     if args.render_probe and not (report.get('software_gles_verified') and report.get('graphics_probe_complete')
-                                  and report.get('rendered_frame_verified')):
+                                  and report.get('rendered_frame_verified') and report.get('swap_capture_verified', True)):
         raise SystemExit('Software GLES diagnostic failed; inspect the logs')
 
 

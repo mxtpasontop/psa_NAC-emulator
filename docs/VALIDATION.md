@@ -127,6 +127,32 @@ Missing vehicle persistence data and zone-monitor state remain visible in the
 master's native logs. Public service registration is a startup milestone, not
 proof that the complete HMI, its applications or vehicle functions are ready.
 
+## Display capture under TCG
+
+The render probe reads the presentation surface during `eglSwapBuffers`.
+Its 800×480 capture matched the firmware Qt paint test's direct readback
+byte for byte. The test also verified restoration of the GL framebuffer and
+pixel pack settings after capture.
+
+In the native display probe, the firmware Surface Manager supplied zone shared
+memory and the HMI master attached to it. The native
+`HMIInternalApplication` loaded Qt Quick groups and presented a solid black
+surface before crashing in its Internet group plugin. Omitting that plugin
+from the disposable snapshot advanced startup to text layout.
+
+The firmware's fontconfig code dereferenced a null native interface in the
+`minimalegl` platform. The display probe supplies the firmware Qt library's
+default native interface when that platform returns null. With this fallback
+the application passed text construction and continued into time and settings
+QML. The capture in that run was still solid black.
+
+A local run with the shared Pixel theme assets gave the same black capture.
+It verified that the original display application created its EGL surface,
+used the native-interface fallback and selected the Pixel theme. The logs
+still report missing vehicle configuration and DateTimeService. The capture
+is an individual application's surface. The full display depends on the
+firmware's compositor and lifecycle.
+
 ## Limits of these results
 
 The quick UI probe stops the HMI process at an early initialization checkpoint.

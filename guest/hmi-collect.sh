@@ -4,7 +4,7 @@ export DBUS_SYSTEM_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
 echo
 echo NAC_HMI_STATE_BEGIN
 kill "$(cat /tmp/nac-hmi-tail.pid)" 2>/dev/null
-for name in dlt nsm framework master; do
+for name in dlt nsm framework master "$@"; do
     echo "NAC_HMI_PROCESS=$name"
     pid=$(cat "/tmp/nac-hmi-$name.pid" 2>/dev/null)
     if [ -n "$pid" ] && [ -r "/proc/$pid/status" ]; then

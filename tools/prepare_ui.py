@@ -94,7 +94,9 @@ def main():
     run(sys.executable, BASE/'tools/build_guest.py')
     run(sys.executable, BASE/'tools/pack_initrd.py', guest, BASE/'images/diagnostic.cpio.gz',
         '--exclude', 'mesa', '--exclude', 'egl-probe', '--exclude', 'render.sh',
-        '--exclude', 'libNacEglBridge.so', '--exclude', 'qt-render-probe')
+        '--exclude', 'libNacEglBridge.so', '--exclude', 'qt-render-probe',
+        '--exclude', 'software-display.sh', '--exclude', 'hmi-display-start.sh',
+        '--exclude', 'hmi-display-collect.sh')
     print('Native UI diagnostics ready. Run tools/run.py --ui-probe --seconds 45')
 
 
